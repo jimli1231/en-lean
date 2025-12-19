@@ -228,7 +228,11 @@
                 </div>
                 <div class="setting-item">
                     <label for="apiKeyInput">Gemini API Key</label>
-                    <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key">
+                    <div class="api-key-row">
+                        <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key">
+                        <button class="btn-test" id="testApiBtn" onclick="testApiKey()">测试</button>
+                    </div>
+                    <div id="apiTestResult" class="api-test-result hidden"></div>
                     <small>Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
                 </div>
                 <div class="setting-item">

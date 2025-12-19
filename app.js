@@ -593,6 +593,64 @@ function saveSettings() {
     alert('Settings saved!');
 }
 
+// Test API Key
+async function testApiKey() {
+    const apiKey = elements.apiKeyInput.value.trim();
+    const testBtn = document.getElementById('testApiBtn');
+    const resultDiv = document.getElementById('apiTestResult');
+    
+    if (!apiKey) {
+        resultDiv.className = 'api-test-result error';
+        resultDiv.innerHTML = '❌ 请先输入 API Key';
+        return;
+    }
+    
+    // Show loading state
+    testBtn.disabled = true;
+    testBtn.textContent = '测试中...';
+    resultDiv.className = 'api-test-result loading';
+    resultDiv.innerHTML = '⏳ 正在测试 API Key...';
+    
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: 'Say "API key is valid" in exactly 4 words.'
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 50
+                }
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            resultDiv.className = 'api-test-result success';
+            resultDiv.innerHTML = `✅ API Key 有效！响应: "${text.trim()}"`;
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.error?.message || `HTTP ${response.status}`;
+            resultDiv.className = 'api-test-result error';
+            resultDiv.innerHTML = `❌ API Key 无效: ${errorMsg}`;
+        }
+    } catch (error) {
+        resultDiv.className = 'api-test-result error';
+        resultDiv.innerHTML = `❌ 网络错误: ${error.message}`;
+    }
+    
+    // Reset button
+    testBtn.disabled = false;
+    testBtn.textContent = '测试';
+}
+
 // Prevent closing settings when clicking inside
 document.querySelector('.settings-content')?.addEventListener('click', (e) => {
     e.stopPropagation();
