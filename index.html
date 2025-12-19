@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakSmart - English Pronunciation Practice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" fill="url(#logoGrad)"/>
+                    <path d="M12 10v12l10-6-10-6z" fill="white"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+                            <stop offset="0%" stop-color="#3B82F6"/>
+                            <stop offset="100%" stop-color="#8B5CF6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>SpeakSmart</span>
+            </div>
+            <button class="settings-btn" onclick="openSettings()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Modal -->
+            <div id="inputModal" class="modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#3B82F6" stroke-width="2" fill="none"/>
+                            <polyline points="14,2 14,8 20,8" stroke="#3B82F6" stroke-width="2" fill="none"/>
+                        </svg>
+                        <h2>Enter Practice Text</h2>
+                    </div>
+                    <textarea id="practiceTextInput" placeholder="Type or paste your English text here..."></textarea>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" onclick="generateSample()">Generate Sample</button>
+                        <button class="btn-primary" onclick="startPractice()">
+                            Start Practice
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Practice View -->
+            <div id="practiceView" class="practice-view hidden">
+                <!-- Text Display Card -->
+                <div class="text-card">
+                    <div class="card-header">
+                        <span class="card-label">READ THIS OUT LOUD</span>
+                        <div class="card-actions">
+                            <button class="icon-btn" onclick="editText()" title="Edit text">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn" onclick="refreshText()" title="New text">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="practiceText" class="practice-text"></div>
+                    <div id="wordTooltip" class="word-tooltip hidden">
+                        <span class="tooltip-text"></span>
+                        <span class="tooltip-action">Click to listen</span>
+                    </div>
+                </div>
+
+                <!-- Recording Section -->
+                <div class="recording-section">
+                    <div id="waveformContainer" class="waveform-container hidden">
+                        <canvas id="waveformCanvas"></canvas>
+                    </div>
+                    
+                    <div class="recording-controls">
+                        <button id="recordBtn" class="record-btn" onclick="toggleRecording()">
+                            <svg id="micIcon" width="28" height="28" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" fill="none" stroke="white" stroke-width="2"/>
+                                <line x1="12" y1="19" x2="12" y2="23" stroke="white" stroke-width="2"/>
+                                <line x1="8" y1="23" x2="16" y2="23" stroke="white" stroke-width="2"/>
+                            </svg>
+                            <svg id="stopIcon" class="hidden" width="28" height="28" viewBox="0 0 24 24" fill="white">
+                                <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            </svg>
+                        </button>
+                        <button id="pauseBtn" class="pause-btn hidden" onclick="pauseRecording()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16" rx="1"/>
+                                <rect x="14" y="4" width="4" height="16" rx="1"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="recording-hint" id="recordingHint">Click to start recording</p>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section hidden">
+                    <div class="score-card">
+                        <span class="score-label">OVERALL SCORE</span>
+                        <div class="score-display">
+                            <span id="scoreValue" class="score-value">0</span>
+                            <span class="score-percent">%</span>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-coach" onclick="hearCoach()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Hear Coach
+                        </button>
+                        <button class="btn-retry" onclick="retryRecording()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            Try Again
+                        </button>
+                        <button class="btn-native" onclick="playNativeVersion()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                            </svg>
+                            Native Version
+                        </button>
+                    </div>
+
+                    <!-- Detailed Breakdown -->
+                    <div class="breakdown-card">
+                        <div class="breakdown-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            <h3>Detailed Breakdown</h3>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-header">
+                                <span>Phoneme Accuracy</span>
+                                <span id="phonemeScore">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="phonemeProgress" class="progress-fill blue"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric">
+                            <div class="metric-header">
+                                <span>Flow, Linking & Rhythm</span>
+                                <span id="flowScore">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="flowProgress" class="progress-fill purple"></div>
+                            </div>
+                        </div>
+
+                        <div id="tipBox" class="tip-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B">
+                                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            <p id="tipText">Analyzing your pronunciation...</p>
+                        </div>
+                    </div>
+
+                    <!-- Coach Notes -->
+                    <div class="coach-card">
+                        <div class="coach-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <span>COACH'S NOTES</span>
+                        </div>
+                        <p id="coachNotes">Loading feedback...</p>
+                    </div>
+
+                    <!-- Pronunciation Help Hint -->
+                    <div class="help-hint">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                        </svg>
+                        <span>Click red words to listen to correct pronunciation</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="loading-overlay hidden">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Analyzing your pronunciation...</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content settings-content">
+                <div class="modal-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                    <h2>Settings</h2>
+                </div>
+                <div class="setting-item">
+                    <label for="apiKeyInput">Gemini API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key">
+                    <small>Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                </div>
+                <div class="setting-item">
+                    <label for="voiceSelect">TTS Voice</label>
+                    <select id="voiceSelect"></select>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+                    <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
