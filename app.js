@@ -15,6 +15,19 @@ let pronunciationResults = null;
 let selectedVoice = null;
 let synth = window.speechSynthesis;
 
+// 新增状态
+let isMuted = false;  // 静音状态
+let lastRecordingBlob = null;  // 保存最后一次录音
+let lastRecordingUrl = null;  // 录音的 URL
+let currentAudio = null;  // 当前播放的音频
+
+// 语音转文字相关状态
+let isSttRecording = false;
+let sttMediaRecorder = null;
+let sttAudioChunks = [];
+let sttRecordingBlob = null;
+let sttRecordingUrl = null;
+
 // DOM Elements
 const elements = {
     inputModal: document.getElementById('inputModal'),
@@ -40,7 +53,19 @@ const elements = {
     coachNotes: document.getElementById('coachNotes'),
     wordTooltip: document.getElementById('wordTooltip'),
     apiKeyInput: document.getElementById('apiKeyInput'),
-    voiceSelect: document.getElementById('voiceSelect')
+    voiceSelect: document.getElementById('voiceSelect'),
+    // 新增元素
+    muteBtn: document.getElementById('muteBtn'),
+    volumeOnIcon: document.getElementById('volumeOnIcon'),
+    volumeOffIcon: document.getElementById('volumeOffIcon'),
+    playRecordingBtn: document.getElementById('playRecordingBtn'),
+    // 语音转文字元素
+    sttRecordBtn: document.getElementById('sttRecordBtn'),
+    sttMicIcon: document.getElementById('sttMicIcon'),
+    sttStopIcon: document.getElementById('sttStopIcon'),
+    sttHint: document.getElementById('sttHint'),
+    sttResult: document.getElementById('sttResult'),
+    sttResultText: document.getElementById('sttResultText')
 };
 
 // Sample texts for practice
@@ -61,10 +86,55 @@ const sampleTexts = [
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     initVoices();
+    loadMuteState();
     
     // Initialize with a sample text
     elements.practiceTextInput.value = sampleTexts[0];
 });
+
+// 加载静音状态
+function loadMuteState() {
+    isMuted = localStorage.getItem('audio_muted') === 'true';
+    updateMuteUI();
+}
+
+// 切换静音状态
+function toggleMute() {
+    isMuted = !isMuted;
+    localStorage.setItem('audio_muted', isMuted);
+    updateMuteUI();
+    
+    // 如果正在播放，停止所有音频
+    if (isMuted) {
+        stopAllAudio();
+    }
+}
+
+// 更新静音 UI
+function updateMuteUI() {
+    if (isMuted) {
+        elements.muteBtn.classList.add('muted');
+        elements.volumeOnIcon.classList.add('hidden');
+        elements.volumeOffIcon.classList.remove('hidden');
+    } else {
+        elements.muteBtn.classList.remove('muted');
+        elements.volumeOnIcon.classList.remove('hidden');
+        elements.volumeOffIcon.classList.add('hidden');
+    }
+}
+
+// 停止所有音频
+function stopAllAudio() {
+    // 停止 TTS
+    synth.cancel();
+    
+    // 停止当前播放的录音
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+}
 
 // Load saved settings
 function loadSettings() {
@@ -243,6 +313,14 @@ async function startRecording() {
         
         mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            
+            // 保存录音以便回放
+            lastRecordingBlob = audioBlob;
+            if (lastRecordingUrl) {
+                URL.revokeObjectURL(lastRecordingUrl);
+            }
+            lastRecordingUrl = URL.createObjectURL(audioBlob);
+            
             await analyzeAudio(audioBlob);
         };
         
@@ -550,6 +628,12 @@ function speakWord(word) {
 
 // Text-to-speech function
 function speakText(text, rate = 0.9) {
+    // 如果静音，不播放
+    if (isMuted) {
+        console.log('音频已静音');
+        return;
+    }
+    
     // Cancel any ongoing speech
     synth.cancel();
     
@@ -565,6 +649,195 @@ function speakText(text, rate = 0.9) {
     }
     
     synth.speak(utterance);
+}
+
+// 播放我的录音
+function playMyRecording() {
+    if (isMuted) {
+        alert('请先取消静音以播放录音');
+        return;
+    }
+    
+    if (!lastRecordingUrl) {
+        alert('还没有录音可以播放');
+        return;
+    }
+    
+    // 停止之前的音频
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+    
+    currentAudio = new Audio(lastRecordingUrl);
+    currentAudio.play();
+}
+
+// ==========================================
+// 语音转英文功能
+// ==========================================
+
+// 切换语音转文字录音
+async function toggleSpeechToText() {
+    if (!isSttRecording) {
+        await startSttRecording();
+    } else {
+        stopSttRecording();
+    }
+}
+
+// 开始语音转文字录音
+async function startSttRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        sttMediaRecorder = new MediaRecorder(stream);
+        sttAudioChunks = [];
+        
+        sttMediaRecorder.ondataavailable = (event) => {
+            sttAudioChunks.push(event.data);
+        };
+        
+        sttMediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(sttAudioChunks, { type: 'audio/webm' });
+            
+            // 保存录音以便回放
+            sttRecordingBlob = audioBlob;
+            if (sttRecordingUrl) {
+                URL.revokeObjectURL(sttRecordingUrl);
+            }
+            sttRecordingUrl = URL.createObjectURL(audioBlob);
+            
+            await transcribeAudio(audioBlob);
+        };
+        
+        sttMediaRecorder.start();
+        isSttRecording = true;
+        
+        // 更新 UI
+        elements.sttRecordBtn.classList.add('recording');
+        elements.sttMicIcon.classList.add('hidden');
+        elements.sttStopIcon.classList.remove('hidden');
+        elements.sttHint.textContent = '录音中... 点击停止';
+        elements.sttResult.classList.add('hidden');
+        
+    } catch (err) {
+        console.error('Error accessing microphone:', err);
+        alert('无法访问麦克风，请允许麦克风权限后重试。');
+    }
+}
+
+// 停止语音转文字录音
+function stopSttRecording() {
+    if (sttMediaRecorder && isSttRecording) {
+        sttMediaRecorder.stop();
+        sttMediaRecorder.stream.getTracks().forEach(track => track.stop());
+        
+        isSttRecording = false;
+        
+        // 更新 UI
+        elements.sttRecordBtn.classList.remove('recording');
+        elements.sttMicIcon.classList.remove('hidden');
+        elements.sttStopIcon.classList.add('hidden');
+        elements.sttHint.textContent = '正在翻译...';
+    }
+}
+
+// 使用 Gemini API 将音频转换为英文
+async function transcribeAudio(audioBlob) {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    
+    if (!apiKey) {
+        alert('请先在设置中配置 Gemini API Key！');
+        elements.sttHint.textContent = '点击开始录音';
+        openSettings();
+        return;
+    }
+    
+    try {
+        const base64Audio = await blobToBase64(audioBlob);
+        
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        {
+                            inlineData: {
+                                mimeType: 'audio/webm',
+                                data: base64Audio
+                            }
+                        },
+                        {
+                            text: `Listen to this audio recording and transcribe what the speaker is saying. 
+If the speaker is speaking in a language other than English, translate it to English.
+If the speaker is already speaking English, just transcribe it.
+If there's no clear speech or the audio is silent, respond with "[No speech detected]".
+
+Only output the transcribed/translated English text, nothing else. Do not add any explanations or notes.`
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 1024
+                }
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const resultText = data.candidates[0].content.parts[0].text.trim();
+        
+        // 显示结果
+        elements.sttResultText.textContent = resultText;
+        elements.sttResult.classList.remove('hidden');
+        elements.sttHint.textContent = '点击开始新录音';
+        
+    } catch (error) {
+        console.error('Error transcribing audio:', error);
+        elements.sttHint.textContent = '翻译失败，请重试';
+        alert('语音转换失败：' + error.message);
+    }
+}
+
+// 播放语音转文字的录音
+function playSttRecording() {
+    if (isMuted) {
+        alert('请先取消静音以播放录音');
+        return;
+    }
+    
+    if (!sttRecordingUrl) {
+        alert('还没有录音可以播放');
+        return;
+    }
+    
+    // 停止之前的音频
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+    
+    currentAudio = new Audio(sttRecordingUrl);
+    currentAudio.play();
+}
+
+// 使用翻译结果作为练习文本
+function useSttResult() {
+    const text = elements.sttResultText.textContent;
+    if (text && text !== '[No speech detected]') {
+        elements.practiceTextInput.value = text;
+        startPractice();
+    } else {
+        alert('没有有效的文本可以使用');
+    }
 }
 
 // Settings functions

@@ -26,12 +26,25 @@
                 </svg>
                 <span>SpeakSmart</span>
             </div>
-            <button class="settings-btn" onclick="openSettings()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-                </svg>
-            </button>
+            <div class="header-actions">
+                <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="关闭/开启所有音频">
+                    <svg id="volumeOnIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    </svg>
+                    <svg id="volumeOffIcon" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <line x1="23" y1="9" x2="17" y2="15"/>
+                        <line x1="17" y1="9" x2="23" y2="15"/>
+                    </svg>
+                </button>
+                <button class="settings-btn" onclick="openSettings()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <!-- Main Content -->
@@ -55,6 +68,53 @@
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                         </button>
+                    </div>
+                    
+                    <!-- 语音转英文区域 -->
+                    <div class="speech-to-text-section">
+                        <div class="section-divider">
+                            <span>或者</span>
+                        </div>
+                        <div class="speech-to-text-card">
+                            <div class="stt-header">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                                <h3>语音转英文</h3>
+                            </div>
+                            <p class="stt-description">直接说话，AI 会将你的语音翻译成英文</p>
+                            
+                            <div class="stt-controls">
+                                <button id="sttRecordBtn" class="stt-record-btn" onclick="toggleSpeechToText()">
+                                    <svg id="sttMicIcon" width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" fill="none" stroke="white" stroke-width="2"/>
+                                    </svg>
+                                    <svg id="sttStopIcon" class="hidden" width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <rect x="6" y="6" width="12" height="12" rx="2"/>
+                                    </svg>
+                                </button>
+                                <span id="sttHint" class="stt-hint">点击开始录音</span>
+                            </div>
+                            
+                            <div id="sttResult" class="stt-result hidden">
+                                <div class="stt-result-header">
+                                    <span>翻译结果：</span>
+                                    <button class="btn-use-text" onclick="useSttResult()">使用此文本练习</button>
+                                </div>
+                                <p id="sttResultText"></p>
+                                <button class="btn-play-stt" onclick="playSttRecording()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+                                    </svg>
+                                    回放我的录音
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,6 +186,13 @@
                     </div>
 
                     <div class="action-buttons">
+                        <button class="btn-playback" id="playRecordingBtn" onclick="playMyRecording()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+                            </svg>
+                            听我的录音
+                        </button>
                         <button class="btn-coach" onclick="hearCoach()">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
