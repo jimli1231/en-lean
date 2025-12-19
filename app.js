@@ -68,18 +68,23 @@ const elements = {
     sttResultText: document.getElementById('sttResultText')
 };
 
-// Sample texts for practice
+// Sample texts for practice - 日常对话
 const sampleTexts = [
-    "Usually, Silas's stubborn vision is to sift seven silky seashells beside the station. This season, after an unusually suspenseful session, his sensible decision is to sell the shells, not stash them.",
-    "The quick brown fox jumps over the lazy dog. This pangram contains every letter of the alphabet at least once.",
-    "She sells seashells by the seashore. The shells she sells are seashells, I'm sure.",
-    "Peter Piper picked a peck of pickled peppers. A peck of pickled peppers Peter Piper picked.",
-    "How much wood would a woodchuck chuck if a woodchuck could chuck wood? He would chuck as much wood as a woodchuck would if a woodchuck could chuck wood.",
-    "The thirty-three thieves thought that they thrilled the throne throughout Thursday.",
-    "I scream, you scream, we all scream for ice cream!",
-    "Red lorry, yellow lorry. Red lorry, yellow lorry. Red lorry, yellow lorry.",
-    "A proper copper coffee pot is a proper coffee pot made of proper copper.",
-    "Betty Botter bought some butter, but she said the butter's bitter. If I put it in my batter, it will make my batter bitter."
+    "Hi, how are you doing today? I'm fine, thanks for asking.",
+    "Could you tell me how to get to the nearest subway station?",
+    "I'd like a cup of coffee, please. With milk and no sugar.",
+    "What time does the meeting start? I think it's at three o'clock.",
+    "Nice to meet you! My name is Tom. I work as a software engineer.",
+    "The weather is really nice today. Would you like to go for a walk?",
+    "Excuse me, is this seat taken? No, please go ahead and sit down.",
+    "I'm sorry, I didn't catch that. Could you please say it again?",
+    "What do you usually do on weekends? I like to watch movies and hang out with friends.",
+    "Can I have the check, please? Sure, I'll be right back with it.",
+    "How was your trip? It was amazing! I had a great time.",
+    "I'm looking for a birthday gift for my friend. Any suggestions?",
+    "Let's grab lunch together. There's a new restaurant nearby.",
+    "I've been learning English for about two years now.",
+    "Could you help me with this? Of course, no problem at all."
 ];
 
 // Initialize app
@@ -474,11 +479,11 @@ Please analyze the pronunciation and provide a detailed assessment in the follow
             "correctPronunciation": "<IPA or simple phonetic>"
         }
     ],
-    "tip": "<one specific actionable tip focusing on the most significant pronunciation issue>",
-    "coachNotes": "<2-3 sentences of detailed feedback about the overall pronunciation, specific patterns of errors, and encouragement>"
+    "tip": "<用中文给出一个具体可执行的发音改进建议，针对最明显的发音问题>",
+    "coachNotes": "<用中文写2-3句话，详细反馈整体发音情况、具体的错误模式，并给予鼓励>"
 }
 
-Be thorough but encouraging. Focus on the most impactful pronunciation issues. If the audio is unclear or silent, give a low score and note that in the feedback.`
+请用中文回复 tip 和 coachNotes 字段。要热情友好、鼓励学习者。如果音频不清晰或静音，给低分并在反馈中用中文说明。`
                         }
                     ]
                 }],
@@ -546,8 +551,8 @@ function generateMockResults() {
         phonemeAccuracy: Math.max(30, overallScore - 10 + Math.floor(Math.random() * 20)),
         flowRhythm: Math.max(30, overallScore - 5 + Math.floor(Math.random() * 15)),
         wordAnalysis: wordAnalysis,
-        tip: "Focus on the 'th' sound - place your tongue between your teeth and blow air gently.",
-        coachNotes: "Good effort! You're making progress with your pronunciation. Pay special attention to the consonant clusters and word endings. Keep practicing and you'll see improvement!"
+        tip: "注意 'th' 的发音 - 把舌头放在上下齿之间，轻轻吹气发出摩擦音。",
+        coachNotes: "做得不错！你的发音正在进步。特别注意辅音连读和单词结尾的发音。继续练习，你会越来越好的！加油！"
     };
 }
 
